@@ -7,7 +7,7 @@ import sys
 from package import import_data, seg_detection, quality
 
 # if you need to access a file next to the source code, use the variable ROOT
-ROOT = .path.dirname(os.path.realpath(__file__))
+ROOT = os.path.dirname(os.path.realpath(__file__))
 
 # Save the current CWD
 data_WD = os.getcwd()
@@ -45,7 +45,7 @@ def print_seg_detection(uturn_lim, n, freq):
     """
 
     # Dump information
-    .chdir(data_WD) # Get back to the normal WD
+    os.chdir(data_WD) # Get back to the normal WD
 
     with open("seg_lim.txt", "wt") as f:
         print(info_msg.format(**display_dict), file=f)
