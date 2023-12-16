@@ -4,7 +4,7 @@
 import os
 import sys
 
-from package import import_data, seg_detection, quality
+from package import import_data, detection, quality
 
 # if you need to access a file next to the source code, use the variable ROOT
 ROOT = os.path.dirname(os.path.realpath(__file__))
