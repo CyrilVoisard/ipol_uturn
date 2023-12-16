@@ -17,7 +17,7 @@ def uturn_detection(data_lb, n, freq, output):
     smooth_angle.fillna(method = "bfill", inplace=True)
 
     # progressive figure construction
-    fig, ax = plt.subplots(2, figsize=(20, 15), sharex=True)
+    fig, ax = plt.subplots(2, figsize=(20, int(min(15, 10*n))), sharex=True)
     ax[0].plot(t, angle)
     ax[0].set_ylabel('Angular position (°)', fontsize=15)
     ax[0].set_title("U-Turn detection", fontsize=15)
@@ -54,7 +54,7 @@ def uturn_detection(data_lb, n, freq, output):
     start_times = start_times*100
     start_times = start_times.astype(int)
 
-    coef = 1/6
+    coef = 1/4
 
     uturns = []
     for i in range(len(start_times)-1):
@@ -85,8 +85,8 @@ def uturn_detection(data_lb, n, freq, output):
         x_inter_go = (b_go - b_u)/(a_u - a_go)
         x_inter_back = (b_back - b_u)/(a_u - a_back)
 
-        ax[1].scatter(x_inter_go, angle[int(freq*x_inter_go)], c="green")
-        ax[1].scatter(x_inter_back, angle[int(freq*x_inter_back)], c="red")
+        ax[0].scatter(x_inter_go, angle[int(freq*x_inter_go)], c="green")
+        ax[0].scatter(x_inter_back, angle[int(freq*x_inter_back)], c="red")
 
         uturns.append([x_inter_go, x_inter_back])
 
