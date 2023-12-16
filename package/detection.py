@@ -54,7 +54,7 @@ def uturn_detection(data_lb, n, freq, output):
     start_times = start_times*100
     start_times = start_times.astype(int)
 
-    coef = 1/4
+    coef = 1/5
 
     uturns = []
     for i in range(len(start_times)-1):
