@@ -52,7 +52,11 @@ def plot_uturn_detection(uturn_lim, data_lb, regression, freq, output):
                     transparent=True, bbox_inches="tight")
 
 
-def uturn_detection(data_lb, steps_lim, freq):
+def uturn_detection(data_lb, n, freq, output):
+    return None
+    
+
+def seg_detection(data_lb, steps_lim, freq):
 
     # boundaries
     start = int(np.min(steps_lim["TO"]))
