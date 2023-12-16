@@ -90,7 +90,7 @@ def uturn_detection(data_lb, n, freq, output):
 
         uturns.append([x_inter_go, x_inter_back])
 
-    # save fig without construction lines
+    # save fig
     path_out = os.path.join(output, "uturn_construction.svg")
     plt.savefig(path_out, dpi=80, transparent=True, bbox_inches="tight")
 
