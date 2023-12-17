@@ -75,8 +75,8 @@ def uturn_detection(data_lb, n, freq, output):
         ax[1].plot(x, y, 'grey', linewidth = 2)
         
         # u-turn phase
-        a = angle[int(start_times[i]-50)]
-        z = angle[int(end_times[i]+50)]
+        a = smooth_angle[int(start_times[i]-50)]
+        z = smooth_angle[int(end_times[i+1]+50)]
         mid=(a+z)/2
         mid_index = find_nearest(smooth_angle, mid)
         start_u = int(mid_index - (1 - coef)*min(end_times[i+1] - mid_index, mid_index - start_times[i]))
