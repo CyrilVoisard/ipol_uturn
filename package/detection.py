@@ -78,6 +78,7 @@ def uturn_detection(data_lb, n, freq, output):
         a = smooth_angle[int(start_times[i]-50)]
         z = smooth_angle[int(end_times[i+1]+50)]
         mid=(a+z)/2
+        print("bornes", a, mid, z)
         mid_index = find_nearest(smooth_angle[start_times[i]:end_times[i+1]], mid)
         print("mid_index", mid_index)
         mid_index = start_times[i] + mid_index
