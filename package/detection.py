@@ -75,8 +75,12 @@ def uturn_detection(data_lb, n, freq, output):
         ax[1].plot(x, y, 'grey', linewidth = 2)
         
         # u-turn phase
-        start_u = int(start_times[i] + coef*(end_times[i+1]-start_times[i]))
-        end_u = int(end_times[i+1] - coef*(end_times[i+1]-start_times[i]))
+        a = angle[int(freq*(start_times[i]-50))]
+        z = angle[int(freq*(end_times[i]+50))]
+        mid=(a+z)/2
+        mid_index = find_nearest(smooth_angle, mid)
+        start_u = int(mid_index - (1 - coef)*min(end_times[i+1] - mid_index, mid_index - start_times[i]))
+        end_u = int(mid_index + (1 - coef)*min(end_times[i+1] - mid_index, mid_index - start_times[i]))
         a_u, b_u, r_u, p_value_u, std_err_u = linregress(t[start_u:end_u], smooth_angle[start_u:end_u])    
         x = np.linspace((start_u-1.2*coef*(end_times[i+1]-start_times[i]))/100, (end_u+1.2*coef*(end_times[i+1]-start_times[i]))/100)
         y = a_u*x + b_u
