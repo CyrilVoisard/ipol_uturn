@@ -54,7 +54,7 @@ def plot_uturn_detection(uturns, data_lb, freq, output):
     green_patch = mpatches.Patch(color='green', alpha=0.1, label='straight phase')
     red_circle = mpatches.Patch(color='red', label='Toe Off')
 
-    ax.legend(handles=[red_patch, green_patch], loc="upper left")
+    ax.legend(handles=[red_patch, green_patch], loc="upper right")
 
     # save fig
     path_out = os.path.join(output, "uturn.svg")
