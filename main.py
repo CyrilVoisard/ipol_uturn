@@ -42,7 +42,7 @@ def print_seg_detection(uturn_lim, freq):
     # Dump information
     os.chdir(data_WD) # Get back to the normal WD
 
-    with open("seg_lim.txt", "wt") as f:
+    with open("uturn_lim.txt", "wt") as f:
         print(info_msg.format(**display_dict), file=f)
         
 
