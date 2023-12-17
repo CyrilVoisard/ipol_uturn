@@ -70,7 +70,7 @@ def uturn_detection(data_lb, n, freq, output):
         start_back = int(end_times[i+1] + coef*(start_times[i+1]-end_times[i+1]))
         end_back = int(start_times[i+1] - coef*(start_times[i+1]-end_times[i+1]))
         a_back, b_back, r_back, p_value_back, std_err_back = linregress(t[start_back:end_back], smooth_angle[start_back:end_back])    
-        x = np.linspace((start_back - 2*coef*(start_times[i+1]-end_times[i+1]))/100, (end_back2 + 2*coef*(start_times[i+1]-end_times[i+1]))/100)
+        x = np.linspace((start_back - 2*coef*(start_times[i+1]-end_times[i+1]))/100, (end_back + 2*coef*(start_times[i+1]-end_times[i+1]))/100)
         y = a_back*x + b_back
         ax[1].plot(x, y, 'grey', linewidth = 2)
         
