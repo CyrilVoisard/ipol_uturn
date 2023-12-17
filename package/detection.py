@@ -78,7 +78,8 @@ def uturn_detection(data_lb, n, freq, output):
         a = smooth_angle[int(start_times[i]-50)]
         z = smooth_angle[int(end_times[i+1]+50)]
         mid=(a+z)/2
-        mid_index = find_nearest(smooth_angle, mid)
+        mid_index = find_nearest(smooth_angle[start_times[i]:end_times[i+1]], mid)
+        mid_index = smooth_angle[start_times[i] + mid_index
         start_u = int(mid_index - (1 - coef)*min(end_times[i+1] - mid_index, mid_index - start_times[i]))
         end_u = int(mid_index + (1 - coef)*min(end_times[i+1] - mid_index, mid_index - start_times[i]))
         a_u, b_u, r_u, p_value_u, std_err_u = linregress(t[start_u:end_u], smooth_angle[start_u:end_u])    
