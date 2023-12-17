@@ -24,29 +24,19 @@ def print_seg_detection(uturn_lim, freq):
         uturn_lim {dict} -- dictionnary with uturn boundaries 
     """
 
-    seg_lim_dict = {'Start': int(seg_lim[0]),
-                    'U-Turn start': int(seg_lim[1]),
-                    'U-Turn end': int(seg_lim[2]),
-                    'End': int(seg_lim[3])}
+    uturn_dict = {'U-Turn start': int(uturn_lim[0][0]),
+                  'U-Turn end': int(uturn_lim[0][1])}
 
-    display_dict = {'Start_title': "Trial start",
-                    'Start': "{Start}".format(**seg_lim_dict),
-                    'Start_sec': "{}".format(round(seg_lim_dict['Start']/freq, 2)),
-                    'U-Turn start_title': "U-turn start",
-                    'U-Turn start': "{U-Turn start}".format(**seg_lim_dict),
-                    'U-Turn start_sec': "{}".format(round(seg_lim_dict['U-Turn start']/100, 2)),
+    display_dict = {'U-Turn start_title': "U-turn start",
+                    'U-Turn start': "{U-Turn start}".format(**uturn_dict),
+                    'U-Turn start_sec': "{}".format(round(uturn_dict['U-Turn start']/freq, 2)),
                     'U-Turn end_title': "U-turn end",
-                    'U-Turn end': "{U-Turn end}".format(**seg_lim_dict),
-                    'U-Turn end_sec': "{}".format(round(seg_lim_dict['U-Turn end']/100, 2)),
-                    'End_title': "Trial end",
-                    'End': "{End}".format(**seg_lim_dict), 
-                    'End_sec': "{}".format(round(seg_lim_dict['End']/100, 2))}
+                    'U-Turn end': "{U-Turn end}".format(**uturn_dict),
+                    'U-Turn end_sec': "{}".format(round(uturn_dict['U-Turn end']/freq, 2))}
         
     info_msg = """
-    {Start_title:<15}| {Start:<10}| {Start_sec:<10}
     {U-Turn start_title:<15}| {U-Turn start:<10}| {U-Turn start_sec:<10}
     {U-Turn end_title:<15}| {U-Turn end:<10}| {U-Turn end_sec:<10}
-    {End_title:<15}| {End:<10}| {End_sec:<10}
     """
 
     # Dump information
@@ -80,7 +70,7 @@ if __name__ == "__main__":
 
     # print phases and figure
     detection.plot_uturn_detection(uturn_lim, data_lb, freq, output=data_WD)
-    if n == 1:
+    if (n == 1) & (len(uturn_lim) == 1):
         print_seg_detection(uturn_lim, freq)
     else:
         print("ok charge")
