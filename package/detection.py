@@ -12,13 +12,51 @@ def plot_uturn_detection(uturns, data_lb, freq, output):
 
     # fig initialization
     fig, ax = plt.subplots(1, figsize=(20, 7), sharex=True)
-    ax[0].plot(t, angle)
-    ax[0].set_ylabel('Angular position (°)', fontsize=15)
-    ax[0].set_title("U-Turn detection", fontsize=15, weight='bold')
-    ax[0].set_xlabel('Time (s)', fontsize=15)
+    ax.plot(t, angle)
+    ax.set_ylabel('Angular position (°)', fontsize=15)
+    ax.set_title("U-Turn detection", fontsize=15, weight='bold')
+    ax.set_xlabel('Time (s)', fontsize=15)
 
-    
-    
+    # min and max
+    mi = np.min(angle)
+    ma = np.max(angle)
+
+    ax.add_patch(patches.Rectangle((0, mi),  # (x,y)
+                                  uturns[0][0],  # width
+                                  ma - mi,  # height
+                                  alpha=0.1,
+                                  facecolor='green', linestyle='dotted'))
+
+    ax.add_patch(patches.Rectangle((uturns[-1][1], mi),  # (x,y)
+                                  len(data_lb) - uturns[-1][1],  # width
+                                  ma - mi,  # height
+                                  alpha=0.1,
+                                  facecolor='green', linestyle='dotted'))
+
+    for i in range(len(uturns)):
+        ax.add_patch(patches.Rectangle((uturns[i][0], mi),  # (x,y)
+                                  uturns[i][1] - uturns[i][0],  # width
+                                  ma - mi,  # height
+                                  alpha=0.1,
+                                  facecolor='red', linestyle='dotted'))
+
+    for i in range(len(uturns)-1):
+        ax.add_patch(patches.Rectangle((uturns[i][1], mi),  # (x,y)
+                                  uturns[i+1][0] - uturns[i][1],  # width
+                                  ma - mi,  # height
+                                  alpha=0.1,
+                                  facecolor='green', linestyle='dotted'))
+
+    # legend
+    red_patch = mpatches.Patch(color='red', alpha=0.1, label='uturn phase')
+    green_patch = mpatches.Patch(color='green', alpha=0.1, label='straight phase')
+    red_circle = mpatches.Patch(color='red', label='Toe Off')
+
+    ax.legend(handles=[red_patch, green_patch], loc="upper left")
+
+    # save fig
+    path_out = os.path.join(output, "uturn.svg")
+    plt.savefig(path_out, dpi=80, transparent=True, bbox_inches="tight")
 
 
 def uturn_detection(data_lb, n, freq, output):
