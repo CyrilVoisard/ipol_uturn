@@ -20,11 +20,11 @@ def uturn_detection(data_lb, n, freq, output):
     fig, ax = plt.subplots(2, figsize=(20, int(min(15, 10*n))), sharex=True)
     ax[0].plot(t, angle)
     ax[0].set_ylabel('Angular position (°)', fontsize=15)
-    ax[0].set_title("U-Turn detection", fontsize=15)
+    ax[0].set_title("U-Turn detection", fontsize=15, weight='bold')
     ax[1].plot(t, angle, label = "raw signal")
     ax[1].plot(t, smooth_angle, label = "merged signal")
     ax[1].set_ylabel('Angular position (°)', fontsize=15)
-    ax[1].set_title("Linear interpolation", fontsize=15)
+    ax[1].set_title("Linear interpolation", fontsize=15, weight='bold')
     ax[1].set_xlabel('Time (s)', fontsize=15)
 
     # 
