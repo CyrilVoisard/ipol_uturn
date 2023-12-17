@@ -160,8 +160,6 @@ def uturn_detection(data_lb, n, freq, output):
     # save fig
     path_out = os.path.join(output, "uturn_construction.svg")
     plt.savefig(path_out, dpi=80, transparent=True, bbox_inches="tight")
-
-    # plot_uturn_detection(uturns, data_lb, freq, output)
     
     return uturns
 
