@@ -74,8 +74,8 @@ if __name__ == "__main__":
     uturn_lim = detection.uturn_detection(data_lb, n, freq, output=data_WD)
 
     # print phases and figure
-    detection.plot_uturn_detection(uturn_lim, data_lb, freq, output)
-    # print_seg_detection(uturn_lim, n, freq)
+    detection.plot_uturn_detection(uturn_lim, data_lb, freq, output=data_WD)
+    #print_uturn(uturn_lim, n, freq)
 
     # print("ok charge")
     sys.exit(0)
