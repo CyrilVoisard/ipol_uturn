@@ -6,7 +6,7 @@ from matplotlib import patches
 from scipy.stats import linregress
 import rdp
 
-def plot_uturn_detection(uturns, data_lb, output):
+def plot_uturn_detection(uturns, data_lb, freq, output):
 
     # data
     t = data_lb["PacketCounter"]
@@ -24,27 +24,27 @@ def plot_uturn_detection(uturns, data_lb, output):
     ma = np.max(angle)
 
     ax.add_patch(patches.Rectangle((0, mi),  # (x,y)
-                                  uturns[0][0],  # width
+                                  uturns[0][0]/freq,  # width
                                   ma - mi,  # height
                                   alpha=0.1,
                                   facecolor='green', linestyle='dotted'))
 
-    ax.add_patch(patches.Rectangle((uturns[-1][1], mi),  # (x,y)
-                                  len(data_lb) - uturns[-1][1],  # width
+    ax.add_patch(patches.Rectangle((uturns[-1][1]/freq, mi),  # (x,y)
+                                  len(data_lb)/freq - uturns[-1][1]/freq,  # width
                                   ma - mi,  # height
                                   alpha=0.1,
                                   facecolor='green', linestyle='dotted'))
 
     for i in range(len(uturns)):
-        ax.add_patch(patches.Rectangle((uturns[i][0], mi),  # (x,y)
-                                  uturns[i][1] - uturns[i][0],  # width
+        ax.add_patch(patches.Rectangle((uturns[i][0]/freq, mi),  # (x,y)
+                                  uturns[i][1]/freq - uturns[i][0]/freq,  # width
                                   ma - mi,  # height
                                   alpha=0.1,
                                   facecolor='red', linestyle='dotted'))
 
     for i in range(len(uturns)-1):
-        ax.add_patch(patches.Rectangle((uturns[i][1], mi),  # (x,y)
-                                  uturns[i+1][0] - uturns[i][1],  # width
+        ax.add_patch(patches.Rectangle((uturns[i][1]/freq, mi),  # (x,y)
+                                  uturns[i+1][0]/freq - uturns[i][1]/freq,  # width
                                   ma - mi,  # height
                                   alpha=0.1,
                                   facecolor='green', linestyle='dotted'))
