@@ -379,7 +379,7 @@ def signals_for_seg(data_lb):
 
 def find_nearest(array, value):
     print("array", array)
-    print(array[i])
+    print(array[0])
     i = 0
     while (value - array[i]) * value > 0:  # Tant qu'on est du même côté, c'est à dire qu'ils ont le même signe
         i += 1
