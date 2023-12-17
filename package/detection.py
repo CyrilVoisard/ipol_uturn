@@ -330,7 +330,7 @@ def indexes(y, thres=0.3, min_dist=1, thres_abs=False):
 
     
     
-def plot_uturn_detection(uturn_lim, data_lb, regression, freq, output):
+def plot_uturn_detection_old(uturn_lim, data_lb, regression, freq, output):
     # Graphic signals
     t_full, angle_x_full = signals_for_seg(data_lb)
 
