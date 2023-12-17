@@ -4,6 +4,23 @@ import matplotlib.pyplot as plt
 from scipy.stats import linregress
 import rdp
 
+def plot_uturn_detection(uturns, data_lb, freq, output):
+
+    # data
+    t = data_lb["PacketCounter"]
+    angle = np.cumsum(data_lb["Gyr_X"]) - np.mean(np.cumsum(data_lb["Gyr_X"]))
+
+    # fig initialization
+    fig, ax = plt.subplots(1, figsize=(20, 7), sharex=True)
+    ax[0].plot(t, angle)
+    ax[0].set_ylabel('Angular position (°)', fontsize=15)
+    ax[0].set_title("U-Turn detection", fontsize=15, weight='bold')
+    ax[0].set_xlabel('Time (s)', fontsize=15)
+
+    
+    
+
+
 def uturn_detection(data_lb, n, freq, output):
 
     # window size for data smoothing
