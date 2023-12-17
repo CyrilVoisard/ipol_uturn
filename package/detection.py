@@ -228,7 +228,7 @@ def window_estimation(data_lb):
         else:
             acf_tot.append(acf_x[i]*(1 - 50/np.sqrt(i))) 
     
-    i, val_i = indexes(acf_tot[50:400], thres=0.99, thres_abs=False)
+    i = indexes(acf_tot[50:400], thres=0.99, thres_abs=False)
     
     return 50 + i[0]
 
@@ -335,7 +335,7 @@ def indexes(y, thres=0.3, min_dist=1, thres_abs=False):
 
         peaks = np.arange(y.size)[~rem]
 
-    return peaks, y[peaks]
+    return peaks
 
 
 
