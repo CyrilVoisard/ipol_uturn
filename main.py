@@ -16,7 +16,7 @@ data_WD = os.getcwd()
 os.chdir(ROOT)
             
 
-def print_seg_detection(uturn_lim, n, freq):
+def print_seg_detection(uturn_lim, freq):
     """Dump the phase segmentation computed from the trial. 
 
     Parameters
@@ -24,9 +24,14 @@ def print_seg_detection(uturn_lim, n, freq):
         uturn_lim {dict} -- dictionnary with uturn boundaries 
     """
 
+    seg_lim_dict = {'Start': int(seg_lim[0]),
+                    'U-Turn start': int(seg_lim[1]),
+                    'U-Turn end': int(seg_lim[2]),
+                    'End': int(seg_lim[3])}
+
     display_dict = {'Start_title': "Trial start",
                     'Start': "{Start}".format(**seg_lim_dict),
-                    'Start_sec': "{}".format(round(seg_lim_dict['Start']/100, 2)),
+                    'Start_sec': "{}".format(round(seg_lim_dict['Start']/freq, 2)),
                     'U-Turn start_title': "U-turn start",
                     'U-Turn start': "{U-Turn start}".format(**seg_lim_dict),
                     'U-Turn start_sec': "{}".format(round(seg_lim_dict['U-Turn start']/100, 2)),
@@ -75,7 +80,11 @@ if __name__ == "__main__":
 
     # print phases and figure
     detection.plot_uturn_detection(uturn_lim, data_lb, freq, output=data_WD)
-    #print_uturn(uturn_lim, n, freq)
+    if n == 1:
+        print_seg_detection(uturn_lim, freq)
+    else:
+        print("ok charge")
+        #print_uturn(uturn_lim, n, freq)
 
     # print("ok charge")
     sys.exit(0)
