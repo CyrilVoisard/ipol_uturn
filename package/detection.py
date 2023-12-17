@@ -1,6 +1,8 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+from matplotlib import patches
 from scipy.stats import linregress
 import rdp
 
