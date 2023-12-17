@@ -33,7 +33,7 @@ def plot_uturn_detection(uturns, data_lb, freq, output):
                                   len(data_lb)/freq - uturns[-1][1]/freq,  # width
                                   ma - mi,  # height
                                   alpha=0.1,
-                                  facecolor='blue', linestyle='dotted'))
+                                  facecolor='green', linestyle='dotted'))
 
     for i in range(len(uturns)):
         ax.add_patch(patches.Rectangle((uturns[i][0]/freq, mi),  # (x,y)
