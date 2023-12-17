@@ -68,7 +68,7 @@ if __name__ == "__main__":
     n = int(args.n)
     
     # load data
-    data_lb = import_data.import_XSens(os.path.join(data_WD, args.i0))
+    data_lb = import_data.import_XSens(os.path.join(data_WD, args.i0), freq=100)
 
     # uturn boundaries detection and figure
     uturn_lim = detection.uturn_detection(data_lb, n, freq, output=data_WD)
