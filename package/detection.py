@@ -220,7 +220,13 @@ def find_epsilon_sup(array, but):
 def window_estimation(data_lb):
     acf_x = autocorr(data_lb["FreeAcc_X"])
     acf_y = autocorr(data_lb["FreeAcc_Y"])
-    acf_tot = acf_x+acf_y
+    # acf_tot = acf_x+acf_y
+    acf_tot = [0 for i in range(50)]
+    for i in range(50, len(acf_x)):
+        if acf_y[i] < 0:
+            acf_tot.append(0)
+        else:
+            acf_tot.append(acf_x[i]*(1 - 50/np.sqrt(i))) 
     
     i, val_i = indexes(acf_tot[50:400], thres=0.99, thres_abs=False)
     
