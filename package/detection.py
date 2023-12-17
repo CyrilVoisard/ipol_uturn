@@ -157,7 +157,7 @@ def uturn_detection(data_lb, n, freq, output):
         ax[0].scatter(x_inter_go, angle[int(freq*x_inter_go)], c="green")
         ax[0].scatter(x_inter_back, angle[int(freq*x_inter_back)], c="red")
 
-        uturns.append([x_inter_go, x_inter_back])
+        uturns.append([int(freq*x_inter_go), int(freq*x_inter_back)])
 
     # save fig
     path_out = os.path.join(output, "uturn_construction.svg")
