@@ -93,7 +93,7 @@ def uturn_detection(data_lb, n, freq, output):
         x_inter_go = (b_go - b_u)/(a_u - a_go)
         x_inter_back = (b_back - b_u)/(a_u - a_back)
 
-        x = np.linspace(x_inter_go-0.1, (x_inter_back-0.1))
+        x = np.linspace(x_inter_go-0.1, x_inter_back+0.1)
         y = a_u*x + b_u
         ax[1].plot(x, y, 'grey', linewidth = 2)
 
