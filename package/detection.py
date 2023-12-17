@@ -324,51 +324,6 @@ def plot_uturn_detection(uturn_lim, data_lb, regression, freq, output):
     path_out = os.path.join(output, "phases_seg_construction.svg")
     plt.savefig(path_out, dpi=80,
                     transparent=True, bbox_inches="tight")
-    
-
-def seg_detection(data_lb, steps_lim, freq):
-
-    # boundaries
-    start = int(np.min(steps_lim["TO"]))
-    end = int(np.max(steps_lim["HS"]))
-    
-    # useful signals
-    t_full, angle_x_full = signals_for_seg(data_lb)
-
-    # qualité : respect du protocole avec une seule rotation pouvant correspondre à un demi tour détectée au niveau du tour.
-    count = -1
-    for i in range(len(angle_x_full)-1):
-        if (angle_x_full[i] - 90)*(angle_x_full[i+1] - 90) < 0:
-            count = count + 1
-    q = max(0, 100-50*count)
-
-    # middle argument
-    mid_index = find_nearest(angle_x_full, 90)
-    l_search = min(abs(end - mid_index), abs(start - mid_index))
-    start = int(mid_index - l_search)
-    end = int(mid_index + l_search)
-
-    t = data_lb["PacketCounter"][start:end]
-    angle_x = angle_x_full[start:end]
-
-    L = len(t)
-    # affine approximation of go phase
-    a_go, b_go, r_go, p_value_go, std_err_go = linregress(t[0:2*L//5], angle_x[0:2*L//5])
-    # affine approximation of back phase
-    a_back, b_back, r_back, p_value_back, std_err_back = linregress(t[3*L//5:], angle_x[3*L//5:])
-    # affine approximation of U-turn phase
-    a_u, b_u, r_u, p_value_u, std_err_u = linregress(t_full[mid_index - freq:mid_index + freq],
-                                                     angle_x_full[mid_index - freq:mid_index + freq])
-
-    # intersection points
-    x_inter_go = (b_go - b_u) / (a_u - a_go)
-    x_inter_back = (b_back - b_u) / (a_u - a_back)
-    approx_uturn_lim = [start, freq * x_inter_go, freq * x_inter_back, end]
-
-    # seg = [0, start_uturn, end_uturn, len(data_lb["Gyr_X"])]
-    seg = [0, int(100*x_inter_go), int(100*x_inter_back), len(data_lb["Gyr_X"])]
-
-    return seg, [a_go, b_go, mid_index, a_u, b_u, a_back, b_back], q
 
 
 def signals_for_seg(data_lb):
