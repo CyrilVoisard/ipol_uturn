@@ -378,6 +378,7 @@ def signals_for_seg(data_lb):
 
 
 def find_nearest(array, value):
+    array=np.array(array)
     print("array", array)
     i = 0
     print(array[i])
