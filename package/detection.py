@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import linregress
 import rdp
 
-def plot_uturn_detection(uturns, data_lb, freq, output):
+def plot_uturn_detection(uturns, data_lb, output):
 
     # data
     t = data_lb["PacketCounter"]
