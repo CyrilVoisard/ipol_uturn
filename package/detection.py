@@ -222,7 +222,7 @@ def window_estimation(data_lb):
     acf_y = autocorr(data_lb["FreeAcc_Y"])
     acf_tot = acf_x+acf_y
     
-    i, val_i = indexes(acf_tot[50:1000], thres=0.99, thres_abs=False)
+    i, val_i = indexes(acf_tot[50:400], thres=0.99, thres_abs=False)
     
     return 50 + i[0]
 
