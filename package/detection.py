@@ -62,7 +62,7 @@ def uturn_detection(data_lb, n, freq, output):
         start_go = int(end_times[i] + coef*(start_times[i]-end_times[i]))
         end_go = int(start_times[i] - coef*(start_times[i]-end_times[i]))
         a_go, b_go, r_go, p_value_go, std_err_go = linregress(t[start_go:end_go], smooth_angle[start_go:end_go])    
-        x = np.linspace(start_go/100, end_go/100)
+        x = np.linspace((start_go - 2*coef*(start_times[i]-end_times[i]))/100, (end_go + 2*coef*(start_times[i]-end_times[i]))/100)
         y = a_go*x + b_go
         ax[1].plot(x, y, 'grey', linewidth = 2)
         
@@ -70,7 +70,7 @@ def uturn_detection(data_lb, n, freq, output):
         start_back = int(end_times[i+1] + coef*(start_times[i+1]-end_times[i+1]))
         end_back = int(start_times[i+1] - coef*(start_times[i+1]-end_times[i+1]))
         a_back, b_back, r_back, p_value_back, std_err_back = linregress(t[start_back:end_back], smooth_angle[start_back:end_back])    
-        x = np.linspace(start_back/100, end_back/100)
+        x = np.linspace((start_back - 2*coef*(start_times[i+1]-end_times[i+1]))/100, (end_back2 + 2*coef*(start_times[i+1]-end_times[i+1]))/100)
         y = a_back*x + b_back
         ax[1].plot(x, y, 'grey', linewidth = 2)
         
@@ -78,7 +78,7 @@ def uturn_detection(data_lb, n, freq, output):
         start_u = int(start_times[i] + coef*(end_times[i+1]-start_times[i]))
         end_u = int(end_times[i+1] - coef*(end_times[i+1]-start_times[i]))
         a_u, b_u, r_u, p_value_u, std_err_u = linregress(t[start_u:end_u], smooth_angle[start_u:end_u])    
-        x = np.linspace(start_u/100, end_u/100)
+        x = np.linspace((start_u-2*coef*(end_times[i+1]-start_times[i]))/100, (end_u+2*coef*(end_times[i+1]-start_times[i]))/100)
         y = a_u*x + b_u
         ax[1].plot(x, y, 'grey', linewidth = 2)
     
