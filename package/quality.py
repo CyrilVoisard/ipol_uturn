@@ -21,8 +21,10 @@ def print_all_quality_index(q1, q2, q3, output):
         qi {int} -- corrected quality index 
         steps_lim_corrected {dataframe} -- pandas dataframe with gait events after elimination of the extra trial steps
     """
-
-    q_mean = round(1/3 * (np.mean(q1) + np.mean(q2) + np.mean(q3)))
+    if q1 == -100:
+        q_mean = round(1/2 * (np.mean(q2) + np.mean(q3)))
+    else:
+        q_mean = round(1/3 * (np.mean(q1) + np.mean(q2) + np.mean(q3)))
 
     fig = plt.figure(figsize=(6, 5))
     gs = GridSpec(nrows=3, ncols=2, width_ratios = [3, 1])
@@ -30,7 +32,10 @@ def print_all_quality_index(q1, q2, q3, output):
     ax0 = plot_quality_index(q_mean, ax0, scale = 1)
     ax0.text(0.22, 0.79, 'Global quality score', fontsize = 14, fontweight='bold', transform=plt.gcf().transFigure)
     ax1 = fig.add_subplot(gs[0, 1], projection='polar')
-    ax1 = plot_quality_index(round(np.mean(q1)), ax1, scale = 3)
+    if q1 == -100:
+        ax1 = plot_quality_index("?", ax1, scale = 3)
+    else:
+        ax1 = plot_quality_index(round(np.mean(q1)), ax1, scale = 3)
     ax1.text(0.7, 0.88, 'Protocol quality score', fontsize = 9, fontweight='bold', transform=plt.gcf().transFigure)
     ax2 = fig.add_subplot(gs[1, 1], projection='polar')
     ax2 = plot_quality_index(round(np.mean(q2)), ax2, scale = 3)
