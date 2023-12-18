@@ -86,12 +86,13 @@ def uturn_detection(data_lb, n, freq, output):
 
     # 
     if n == 0 : 
-        goal = 50
+        goal = 100
     else:
-        goal = 2 + 2*n  # looking for a number of events corresponding to: start + end + 2*number of U-turns
+        goal = 2*(2 + 2*n)  # looking for a number of events corresponding to: start + end + 2*number of U-turns
 
     # Ramer-Douglas-Peucker Algorithm points selection
-    points = rdp_select(t, smooth_angle, goal)
+    # points = rdp_select(t, smooth_angle, goal)
+    points = find_epsilon_inf(t, smooth_angle, goal)
     ax[1].scatter(points[:, 0], points[:, 1], c="blue", label="RDP selection")
 
     # preselection 
@@ -180,7 +181,22 @@ def rdp_select(t, angle, goal):
     return select_sup
 
 
+def find_epsilon_inf(t, angle, but):
+    array = np.zeros((len(angle), 2))
+    array[:, 0] = t
+    array[:, 1] = angle
     
+    epsilon_sup = 10
+    rdp_sup = rdp.rdp(array, epsilon = epsilon_sup, algo="rec")
+    found_sup = len(rdp_sup)
+    while found_sup < but :
+        print("no", found_sup, epsilon_sup, rdp_sup)
+        epsilon_sup = epsilon_sup/2
+        rdp_sup = rdp.rdp(array, epsilon = epsilon_sup, algo="rec")
+        found_sup = len(rdp_sup)
+    print(found_sup, epsilon_sup, rdp_sup)
+    return rdp_sup
+
 
 # On optimise la valeur de epsilon par récursivité
 def find_epsilon_bornes(array, but, epsilon_inf, epsilon_sup): 
