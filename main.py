@@ -121,7 +121,13 @@ if __name__ == "__main__":
         print_uturn(uturn_lim, data_lb, n, freq)
 
     # quality index
-    q = 100*(1-np.std(uturn_val))
+    if n == 0:
+        q1 = 100
+    else:
+        q1 = 100*np.min(n, len(uturn_lim))/np.max(n, len(uturn_lim))
+    q2 = 100*(1-np.std(uturn_val))
+    q3 = 100*np.min(uturn_val)/np.max(uturn_val)
+    quality.print_all_quality_index(q1, q2, q3, output=data_WD)
     
 
     # print("ok charge")
