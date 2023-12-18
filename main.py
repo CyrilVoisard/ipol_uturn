@@ -74,13 +74,6 @@ def print_uturn(uturn_lim, data_lb, n, freq):
                     'Variation': "U-turn variation (%): {}".format(**uturn_dict),
                     }
             
-            {'Total duration_title': "Total duration",
-                    'U-Turn start': "{U-Turn start}".format(**uturn_dict),
-                    'U-Turn start_sec': "{}".format(round(uturn_dict['U-Turn start']/freq, 2)),
-                    'U-Turn end_title': "U-turn end",
-                    'U-Turn end': "{U-Turn end}".format(**uturn_dict),
-                    'U-Turn end_sec': "{}".format(round(uturn_dict['U-Turn end']/freq, 2))}
-        
     info_msg = """
     {Title_1:^30}|{Title_2:^30}
     ------------------------------+------------------------------
