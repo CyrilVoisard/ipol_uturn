@@ -132,5 +132,4 @@ if __name__ == "__main__":
     
 
     # print("ok charge")
-    sys#
-.exit(0)
+    sys#.exit(0)
