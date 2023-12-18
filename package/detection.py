@@ -105,10 +105,11 @@ def uturn_detection(data_lb, n, freq, output):
     ax[1].scatter(start_points[:, 0], start_points[:, 1], c="green", label = "start points estimation")
     ax[1].scatter(end_points[:, 0], end_points[:, 1], c="red", label = "end points estimation")
 
+    uturn_val = end_points[:, 1]
     end_times = np.insert(end_points[:, 0], 0, 0, axis=0)
     end_times = end_times*100
     end_times = end_times.astype(int)
-    start_times = np.insert(start_points[:, 0], len(end_points[:, 0]), 0.01*len(angle), axis=0)
+    start_times = np.insert(start_points[:, 0], len(end_points[:, 0]), len(angle)/freq, axis=0)
     start_times = start_times*100
     start_times = start_times.astype(int)
 
@@ -122,7 +123,7 @@ def uturn_detection(data_lb, n, freq, output):
         start_go = int(end_times[i] + coef*(start_times[i]-end_times[i]))
         end_go = int(start_times[i] - coef*(start_times[i]-end_times[i]))
         a_go, b_go, r_go, p_value_go, std_err_go = linregress(t[start_go:end_go], smooth_angle[start_go:end_go])    
-        x = np.linspace((start_go - 2*coef*(start_times[i]-end_times[i]))/100, (end_go + 2*coef*(start_times[i]-end_times[i]))/100)
+        x = np.linspace((start_go - 2*coef*(start_times[i]-end_times[i]))/freq, (end_go + 2*coef*(start_times[i]-end_times[i]))/freq)
         y = a_go*x + b_go
         ax[1].plot(x, y, 'grey', linewidth = 2)
         
@@ -131,7 +132,7 @@ def uturn_detection(data_lb, n, freq, output):
         end_back = int(start_times[i+1] - coef*(start_times[i+1]-end_times[i+1]))
         print("cherche", i, end_times[i+1], start_back, end_back, start_times[i+1])
         a_back, b_back, r_back, p_value_back, std_err_back = linregress(t[start_back:end_back], smooth_angle[start_back:end_back])    
-        x = np.linspace((start_back - 2*coef*(start_times[i+1]-end_times[i+1]))/100, (end_back + 2*coef*(start_times[i+1]-end_times[i+1]))/100)
+        x = np.linspace((start_back - 2*coef*(start_times[i+1]-end_times[i+1]))/freq, (end_back + 2*coef*(start_times[i+1]-end_times[i+1]))/freq)
         y = a_back*x + b_back
         ax[1].plot(x, y, 'grey', linewidth = 2)
         
@@ -167,7 +168,7 @@ def uturn_detection(data_lb, n, freq, output):
     path_out = os.path.join(output, "uturn_construction.svg")
     plt.savefig(path_out, dpi=80, transparent=True, bbox_inches="tight")
     
-    return uturns
+    return uturns, uturn_val
 
 def rdp_select(t, angle, goal):
     array = np.zeros((len(angle), 2))
