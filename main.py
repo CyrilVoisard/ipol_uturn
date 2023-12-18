@@ -3,6 +3,7 @@
 
 import os
 import sys
+import numpy as np
 
 from package import import_data, detection, quality
 
