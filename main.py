@@ -122,7 +122,7 @@ if __name__ == "__main__":
 
     # quality index
     if n == 0:
-        q1 = 100
+        q1 = -100
     else:
         q1 = 100*np.min(n, len(uturn_lim))/np.max(n, len(uturn_lim))
     q2 = 100*(1-np.std(uturn_val)/np.mean(uturn_val))
