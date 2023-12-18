@@ -127,8 +127,6 @@ if __name__ == "__main__":
         q1 = 100*np.min(n, len(uturn_lim))/np.max(n, len(uturn_lim))
     q2 = 100*(1-np.std(uturn_val)/np.mean(uturn_val))
     q3 = 100*np.min(uturn_val)/np.max(uturn_val)
-    print('qqq', q1, q2, q3, np.min(uturn_val), np.max(uturn_val))
-    print(a)
     quality.print_all_quality_index(q1, q2, q3, output=data_WD)
     
 
