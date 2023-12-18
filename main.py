@@ -72,7 +72,7 @@ def print_uturn(uturn_lim, data_lb, n, freq):
                     'Title_2': "Statistics:",
                     'Percentage': "U-turn percentage (%): {Percentage}".format(**uturn_dict),
                     'Mean': "Mean U-turn duration (s): {Mean U-turn duration}".format(**uturn_dict),
-                    'Variation': "U-turn variation (%): {}".format(**uturn_dict),
+                    'Variation': "U-turn variation (%): {U-turn variation}".format(**uturn_dict),
                     }
             
     info_msg = """
