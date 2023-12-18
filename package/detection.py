@@ -105,7 +105,7 @@ def uturn_detection(data_lb, n, freq, output):
     ax[1].scatter(start_points[:, 0], start_points[:, 1], c="green", label = "start points estimation")
     ax[1].scatter(end_points[:, 0], end_points[:, 1], c="red", label = "end points estimation")
 
-    uturn_val = end_points[:, 1]
+    uturn_val = abs(end_points[:, 1])
     end_times = np.insert(end_points[:, 0], 0, 0, axis=0)
     end_times = end_times*100
     end_times = end_times.astype(int)
