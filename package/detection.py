@@ -74,7 +74,10 @@ def uturn_detection(data_lb, n, freq, output):
     smooth_angle.fillna(method = "bfill", inplace=True)
 
     # progressive figure construction
-    fig, ax = plt.subplots(2, figsize=(20, int(min(15, 10*n))), sharex=True)
+    if n!=0:
+        fig, ax = plt.subplots(2, figsize=(20, int(min(15, 10*n))), sharex=True)
+    else:
+        fig, ax = plt.subplots(2, figsize=(20, 15), sharex=True)
     ax[0].plot(t, angle)
     ax[0].set_ylabel('Angular position (°)', fontsize=15)
     ax[0].set_title("U-Turn detection", fontsize=15, weight='bold')
