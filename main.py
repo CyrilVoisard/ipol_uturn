@@ -63,7 +63,7 @@ def print_uturn(uturn_lim, data_lb, n, freq):
                   'N_found': len(uturn_lim),
                   'Percentage' : round(100*np.sum(times)/len(data_lb), 2), 
                   'Mean U-turn duration': round(np.mean(times)/freq, 2), 
-                  'U-turn variation' : round(100*np.std(times), 2)}
+                  'U-turn variation' : round(100*np.std(times)/np.mean(times), 2)}
 
     display_dict = {'Title_1': "Search results:",
                     'Duration': "Total duration (s): {Duration}".format(**uturn_dict),
