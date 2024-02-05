@@ -154,6 +154,8 @@ def quality_evaluation(uturns, uturn_val, n):
         q_tot[1] = round(100 * np.std(uturn_val) / np.mean(uturn_val))
     amp_ref = 300
     q_tot[2] = round(100 * abs(amp_ref - np.mean(uturn_val)) / amp_ref)
+    print("test", q_tot, np.mean(uturn_val), abs(amp_ref - np.mean(uturn_val)) / amp_ref)
+    print(test)
 
     return q_tot
 
