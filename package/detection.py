@@ -9,7 +9,7 @@ from scipy import interpolate
 import rdp
 
 
-def plot_uturn_detection(uturns, data_lb, freq, id_exp, output):
+def plot_uturn_detection(uturns, data_lb, freq, output):
     """Plot the uturn detection as a .png figure.
 
     Arguments:
@@ -77,7 +77,7 @@ def plot_uturn_detection(uturns, data_lb, freq, id_exp, output):
     plt.savefig(path_out, dpi=80, bbox_inches="tight")
 
 
-def uturn_detection(data_lb, n, freq, id_exp, output):
+def uturn_detection(data_lb, n, freq, output):
     """Detect uturns boundaries in a trial from the lower back sensor.
 
     Arguments:
