@@ -151,9 +151,9 @@ def quality_evaluation(uturns, uturn_val, n):
     if n != 0:
         q_tot[0] = round(100 * (min(n, len(uturns)) / max(n, len(uturns))))
     if n > 1:
-        q_tot[1] = round(100 * np.std(uturn_val) / np.mean(uturn_val))
+        q_tot[1] = round(100 * np.std(abs(uturn_val)) / np.mean(abs(uturn_val)))
     amp_ref = 300
-    q_tot[2] = round(100 * abs(amp_ref - np.mean(uturn_val)) / amp_ref)
+    q_tot[2] = round(100 * abs(amp_ref - np.mean(abs(uturn_val))) / amp_ref)
     print("test", q_tot, np.mean(uturn_val), abs(amp_ref - np.mean(uturn_val)) / amp_ref)
     print(test)
 
