@@ -110,7 +110,7 @@ if __name__ == "__main__":
     data_lb = import_data.import_XSens(os.path.join(data_WD, args.i0), freq=100)
 
     # uturn boundaries detection and figure
-    uturn_lim, uturn_val = detection.uturn_detection(data_lb, n, freq, output=data_WD)
+    uturn_lim, uturn_val, q_tot = detection.uturn_detection(data_lb, n, freq, output=data_WD)
 
     # print phases and figure
     detection.plot_uturn_detection(uturn_lim, data_lb, freq, output=data_WD)
@@ -121,14 +121,7 @@ if __name__ == "__main__":
         print_uturn(uturn_lim, data_lb, n, freq)
 
     # quality index
-    if n == 0:
-        q1 = -100
-    else:
-        q1 = 100*min(n, len(uturn_lim))/max(n, len(uturn_lim))
-    q2 = 100*(1-np.std(uturn_val)/np.mean(uturn_val))
-    q3 = 100*np.min(uturn_val)/np.max(uturn_val)
-    quality.print_all_quality_index(q1, q2, q3, output=data_WD)
+    quality.print_all_quality_index(q_tot, output=data_WD)
     
-
     # print("ok charge")
     sys.exit(0)
