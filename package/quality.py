@@ -7,19 +7,12 @@ from scipy import stats
 
 
 def print_all_quality_index(q_tot, output):
-    """Compute the quality index of the trial gait events detection (between 0 and 100) and produce a picture of the number surrounded by an appropriately colored circle. 
-    Add quality index formula ? 
+    """Produce a picture of the number surrounded by an appropriately colored circle to present quality index. 
 
     Parameters
     ----------
-        steps_lim_full {dataframe} -- pandas dataframe with all the detected gait events
-        seg_lim {dataframe} -- pandas dataframe with phases events 
+        q_tot {array} -- numpy array with quality indicators [q1, q2, q3]
         output {str} -- folder path for output fig
-
-    Returns
-    -------
-        qi {int} -- corrected quality index 
-        steps_lim_corrected {dataframe} -- pandas dataframe with gait events after elimination of the extra trial steps
     """
     
     [q1, q2, q3] = q_tot
@@ -58,7 +51,11 @@ def plot_quality_index(q, ax, scale):
     Parameters
     ----------
         q {int} -- quality index 
-        ax {} -- ax in output fig
+        ax {matplotlib ax} -- ax in output fig
+
+    Returns 
+    ---------
+        ax {matplotlib ax} -- updated ax in output fig
     """
   
     # plot qi
@@ -90,14 +87,19 @@ def plot_quality_index_text(q, ax, scale):
     Parameters
     ----------
         q {int} -- quality index 
-        ax {} -- ax in output fig
+        ax {matplotlib ax} -- ax in output fig
+        scale {int} -- to adapt to the fig size
+        
+    Returns 
+    ---------
+        ax {matplotlib ax} -- updated ax in output fig
     """
   
     # plot qi
     xval = np.arange(0, 2*np.pi*(.05+0.90), 0.01)
     colormap = plt.get_cmap("Greys")
     norm = mpl.colors.Normalize(0.0, 2*np.pi)
-    # f, ax = plt.subplots(nrows=1, ncols=1, figsize=(4,4),subplot_kw=dict(projection='polar'))
+
     #Scatter version
     yval = np.ones_like(xval)
     ax.scatter(xval, yval, c=xval, s=300/(2*scale), cmap=colormap, norm=norm, linewidths=1)
