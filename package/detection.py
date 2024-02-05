@@ -16,7 +16,6 @@ def plot_uturn_detection(uturns, data_lb, freq, output):
         uturns {array} -- numpy array with uturn boundaries time samples
         data_lb {dataframe} -- pandas dataframe with pre-processed lower back sensor time series
         freq {int} -- acquisition frequency
-        id_exp {str} -- id from the experience
         output {str} -- folder path where to save final plot
 
     Returns
@@ -73,7 +72,7 @@ def plot_uturn_detection(uturns, data_lb, freq, output):
     ax.legend(handles=[red_patch, green_patch], loc="upper right")
 
     # save fig
-    path_out = os.path.join(output, id_exp + "_uturn.png")
+    path_out = os.path.join(output, "uturn.svg")
     plt.savefig(path_out, dpi=80, bbox_inches="tight")
 
 
@@ -84,7 +83,6 @@ def uturn_detection(data_lb, n, freq, output):
         data_lb {dataframe} -- pandas dataframe with pre-processed lower back sensor time series
         n {int} -- number of attempted uturns. put 0 if no idea.
         freq {int} -- acquisition frequency
-        id_exp {str} -- id from the experience
         output {str} -- folder path where to save construction plot
 
     Returns
@@ -126,7 +124,7 @@ def uturn_detection(data_lb, n, freq, output):
                 uturns.append(uturn)
 
     # save fig construction
-    path_out = os.path.join(output, id_exp + "_uturn_construction.png")
+    path_out = os.path.join(output, "uturn_construction.svg")
     fig.savefig(path_out, dpi=80, bbox_inches="tight")
 
     # quality evaluation
