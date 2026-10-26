@@ -1,127 +1,53 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
+"""IPOL demo: U-turn segmentation of a go / U-turn / back walking test with a lower-back IMU.
 
+Usage:
+    python main.py -i0 trial_lb.txt -freq 100 [-unit rad/s] [-legacy 0]
+
+Outputs (in the current directory):
+    uturn.png               heading, fitted model, phases and angular velocity
+    uturn_construction.png  intermediate steps of the algorithm
+    uturn.txt               results and indicators
+    uturn.json              results, indicators and parameters (download)
+"""
+
+import argparse
 import os
 import sys
-import numpy as np
 
-from package import import_data, detection, quality
+from package import config, import_data, plot_uturn, report, uturn_detection
 
-# if you need to access a file next to the source code, use the variable ROOT
+# folder of the source code, and folder in which the demo is executed
 ROOT = os.path.dirname(os.path.realpath(__file__))
-
-# Save the current CWD
 data_WD = os.getcwd()
 
-# Change the CWD to ROOT
-os.chdir(ROOT)
-            
 
-def print_seg_detection(uturn_lim, freq):
-    """Dump the phase segmentation computed from the trial. 
-
-    Parameters
-    ----------
-        uturn_lim {dict} -- dictionnary with uturn boundaries 
-    """
-
-    uturn_dict = {'U-Turn start': int(uturn_lim[0][0]),
-                  'U-Turn end': int(uturn_lim[0][1])}
-
-    display_dict = {'U-Turn start_title': "U-turn start",
-                    'U-Turn start': "{U-Turn start}".format(**uturn_dict),
-                    'U-Turn start_sec': "{}".format(round(uturn_dict['U-Turn start']/freq, 2)),
-                    'U-Turn end_title': "U-turn end",
-                    'U-Turn end': "{U-Turn end}".format(**uturn_dict),
-                    'U-Turn end_sec': "{}".format(round(uturn_dict['U-Turn end']/freq, 2))}
-        
-    info_msg = """
-    {U-Turn start_title:<15}| {U-Turn start:<10}| {U-Turn start_sec:<10}
-    {U-Turn end_title:<15}| {U-Turn end:<10}| {U-Turn end_sec:<10}
-    """
-
-    # Dump information
-    os.chdir(data_WD) # Get back to the normal WD
-
-    with open("uturn_lim.txt", "wt") as f:
-        print(info_msg.format(**display_dict), file=f)
-
-
-def print_uturn(uturn_lim, data_lb, n, freq):
-    """Dump the phase segmentation computed from the trial. 
-
-    Parameters
-    ----------
-        uturn_lim {dict} -- dictionnary with uturn boundaries 
-    """
-    times = []
-    for i in range(len(uturn_lim)):
-        times.append(uturn_lim[0][1]-uturn_lim[0][0])
-
-    uturn_dict = {'Duration': len(data_lb)/freq, 
-                  'N_wanted': n, 
-                  'N_found': len(uturn_lim),
-                  'Percentage' : round(100*np.sum(times)/len(data_lb), 2), 
-                  'Mean U-turn duration': round(np.mean(times)/freq, 2), 
-                  'U-turn variation' : round(100*np.std(times)/np.mean(times), 2)}
-
-    display_dict = {'Title_1': "Results:",
-                    'Duration': "Total duration (s): {Duration}".format(**uturn_dict),
-                    'Wanted': "Wanted: {N_wanted}".format(**uturn_dict),
-                    'Found': "Found: {N_found}".format(**uturn_dict),
-                    'Title_2': "Statistics:",
-                    'Percentage': "U-turn percentage (%): {Percentage}".format(**uturn_dict),
-                    'Mean': "Mean U-turn duration (s): {Mean U-turn duration}".format(**uturn_dict),
-                    'Variation': "U-turn variation (%): {U-turn variation}".format(**uturn_dict),
-                    }
-            
-    info_msg = """
-    {Title_1:^30}|{Title_2:^30}
-    ------------------------------+------------------------------
-    {Duration:<30}| {Percentage:<30}
-    {Wanted:<30}| {Mean:<30}
-    {Found:<30}| {Variation:<30}
-    """
-
-    # Dump information
-    os.chdir(data_WD) # Get back to the normal WD
-
-    with open("uturn_lim.txt", "wt") as f:
-        print(info_msg.format(**display_dict), file=f)
-        
-
-if __name__ == "__main__":
-
-    import argparse
-
-    parser = argparse.ArgumentParser(description='Return a semiogram for a given trial.')
-    parser.add_argument('-i0', metavar='data_lb', help='Time series for the lower back sensor.')
-    
-    parser.add_argument('-freq', metavar='freq',
-                        help='Acquistion frequency.')
-    parser.add_argument('-n', metavar='n',
-                        help='Estimated number of uturns.')
+def main():
+    parser = argparse.ArgumentParser(description="U-turn segmentation from a lower-back IMU.")
+    parser.add_argument("-i0", metavar="data_lb", required=True,
+                        help="Text file of the lower-back sensor (columns PacketCounter and Gyr_X).")
+    parser.add_argument("-freq", metavar="freq", type=float, required=True,
+                        help="Acquisition frequency (Hz).")
+    parser.add_argument("-unit", metavar="unit", default=config.GYR_UNIT, choices=["rad/s", "deg/s"],
+                        help="Unit of the angular velocity in the file (default: rad/s).")
+    parser.add_argument("-legacy", metavar="legacy", type=int, default=int(config.LEGACY),
+                        help="1 to use the rules of the original implementation (default: 0).")
     args = parser.parse_args()
 
-    freq = int(args.freq)
-    n = int(args.n)
-    
-    # load data
-    data_lb = import_data.import_XSens(os.path.join(data_WD, args.i0), freq=100)
+    try:
+        gyr = import_data.import_lower_back(os.path.join(data_WD, args.i0), args.freq, args.unit)
+        res = uturn_detection.detect_uturn(gyr, args.freq, legacy=bool(args.legacy))
+    except (ValueError, OSError) as error:
+        with open(os.path.join(data_WD, "demo_failure.txt"), "w") as f:
+            f.write("The U-turn could not be segmented: {}\n".format(error))
+        return 0
 
-    # uturn boundaries detection and figure
-    uturn_lim, uturn_val, q_tot = detection.uturn_detection(data_lb, n, freq, output=data_WD)
+    plot_uturn.plot_result(res, gyr, output=data_WD)
+    plot_uturn.plot_construction(res, output=data_WD)
+    report.write_reports(res, len(gyr), output=data_WD)
+    return 0
 
-    # print phases and figure
-    detection.plot_uturn_detection(uturn_lim, data_lb, freq, output=data_WD)
-    if (n == 1) & (len(uturn_lim) == 1):
-        print_seg_detection(uturn_lim, freq)
-    else:
-        print("ok charge")
-        print_uturn(uturn_lim, data_lb, n, freq)
 
-    # quality index
-    quality.print_all_quality_index(q_tot, output=data_WD)
-    
-    # print("ok charge")
-    sys.exit(0)
+if __name__ == "__main__":
+    sys.exit(main())
