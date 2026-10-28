@@ -106,7 +106,7 @@ def plot_construction(res, output, filename="uturn_construction.png"):
     ax[1].axvspan(a0 / f, a1 / f, color=COLOR_WINDOW, alpha=0.15, lw=0, label="fitting window")
     ax[1].set_ylabel("Heading (deg)")
     ax[1].set_title("B. Steps 2-3 - centring, turn candidates and fitting window "
-                    "({} half-turn(s) detected)".format(res.n_half_turns), loc="left")
+                    "({} U-turn(s) detected)".format(res.n_half_turns), loc="left")
 
     # C. model fit
     ax[2].plot(x, res.theta[a0:a1], color=COLOR_SIGNAL, lw=1.5, label="heading on the window")

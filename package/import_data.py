@@ -1,5 +1,7 @@
 """Loading and pre-processing of the lower-back inertial signal."""
 
+import os
+
 import numpy as np
 import pandas as pd
 from scipy.signal import butter, filtfilt
@@ -27,12 +29,12 @@ def load_xsens(filename):
             if line.startswith("PacketCounter"):
                 break
         else:
-            raise ValueError("The column 'PacketCounter' was not found in {}.".format(filename))
+            raise ValueError("The column 'PacketCounter' was not found in {}.".format(os.path.basename(filename)))
 
     signal = pd.read_csv(filename, delimiter=r"[,\s]+", skiprows=i, header=0, engine="python")
     signal = signal.dropna(axis=1, how="all")
     if "Gyr_X" not in signal.columns:
-        raise ValueError("The column 'Gyr_X' was not found in {}.".format(filename))
+        raise ValueError("The column 'Gyr_X' was not found in {}.".format(os.path.basename(filename)))
 
     # unwrap the 16-bit packet counter, then express it from 0
     counter = signal["PacketCounter"].to_numpy(dtype=float)
@@ -40,7 +42,7 @@ def load_xsens(filename):
     counter = counter + 65536 * np.concatenate(([0], np.cumsum(jumps)))
     counter = counter - counter[0]
     if np.any(np.diff(counter) <= 0):
-        raise ValueError("The packet counter is not increasing in {}.".format(filename))
+        raise ValueError("The packet counter is not increasing in {}.".format(os.path.basename(filename)))
 
     grid = np.arange(0, int(counter[-1]) + 1)
     data = {"PacketCounter": grid}

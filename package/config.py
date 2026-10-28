@@ -9,21 +9,21 @@ FILTER_ORDER = 8
 FILTER_FC = 14.0
 
 #: Quantiles defining the two heading levels; the heading is centred on their midpoint,
-#: Equation (centring).
+#: Equation (5).
 Q_LOW = 0.15
 Q_HIGH = 0.85
 
-#: Fraction kappa of each side of the turn kept in the fitting window, Equation (window).
+#: Fraction kappa of each side of the turn kept in the fitting window, Equation (7).
 SIDE_FRAC = 0.6
 
-#: Initial amplitude a0 (deg) and duration c0 (s) of the turning model, Equation (init).
+#: Initial amplitude a0 (deg) and duration c0 (s) of the turning model, Equation (12).
 A0_DEG = 180.0
 C0_S = 3.0
 
-#: Bound C_max on the residual drift of the turning model (deg/s), Equation (bounds).
+#: Bound C_max on the residual drift of the turning model (deg/s), Equation (11).
 C_MAX_DPS = 1.0
 
-#: Hysteresis H of the half-turn indicator (deg), Equation (U-turns).
+#: Hysteresis H of the U-turn indicator (deg), Equation (15).
 HYSTERESIS_DEG = 45.0
 
 #: Unit of the angular velocity in the input file: "rad/s" (default) or "deg/s".

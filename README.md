@@ -1,9 +1,9 @@
-# U-Turn Segmentation in a Go-and-Back Walking Test with a Lower-Back IMU
+# U-Turn Segmentation with a Lower-Back Inertial Sensor
 
 ## General information
 
 IPOL article: Voisard et al., *U-Turn Segmentation with a Lower-Back Inertial Sensor: an
-Implementation of the Turning Model of Salarian et al.*, Image Processing On Line (submitted).
+Implementation of the Model of Salarian et al.*, Image Processing On Line (submitted).
 IPOL demo: (link given once the article is published)
 Contact: cyril.voisard@gmail.com
 
@@ -20,20 +20,21 @@ sensor placed on the lower back (L5), recorded during a test made of a standing 
 straight walk, a U-turn, a straight walk back and a standing period. The code returns the first
 and last samples of the U-turn, its duration, amplitude, direction and peak angular velocity,
 and three indicators: the coefficient of determination of the model fit (R²), the number of
-half-turns detected in the recording (1 expected; a different value reveals a deviation from the
+U-turns detected in the recording (1 expected; a different value reveals a deviation from the
 protocol) and the gyroscope drift that was removed.
 
 The algorithm has four steps (Section 3 of the article):
 
-1. integration of the angular velocity into a heading, and removal of a linear drift estimated
-   on the most linear window of the recording;
-2. centring of the heading between its two levels and detection of its sign changes;
-3. fitting window made of the half of each side of the turn adjacent to it, centring and
-   orientation of the heading;
-4. non-linear least-squares fit of the turning model of Salarian et al.;
+1. integration of the angular velocity into a trajectory (heading), and removal of a linear
+   drift estimated on the most linear window of the recording;
+2. centering of the trajectory between its two levels and detection of its sign changes;
+3. fitting window made of a fraction (60%) of each side of the turn, centering and orientation
+   of the trajectory;
+4. non-linear least-squares fit of the U-turn model of Salarian et al.;
    the U-turn is the transition interval of the fitted step.
 
-All numerical parameters are gathered, with their meaning, in `package/config.py`.
+The parameters of Table 1 of the article are gathered in `package/config.py`; the constants of
+the drift estimation (window lengths, linearity score) are fixed in `package/uturn_detection.py`.
 
 ## Running the code
 
@@ -41,17 +42,15 @@ Python 3.9 or later.
 
 ```
 pip install -r requirements.txt
-python main.py -i0 example_datasets/<file>_lb.txt -freq 100 -unit rad/s
+python main.py -i0 <file>_lb.txt -freq 100 -unit rad/s
 ```
 
 Arguments:
 
-- `-i0`: text file of the lower-back sensor, as exported by XSens MT Manager (header lines are
-  skipped; the table must contain the columns `PacketCounter` and `Gyr_X`, other columns are
-  ignored);
+- `-i0`: text file of the lower-back sensor (header lines are skipped; the table must contain
+  the columns `PacketCounter` and `Gyr_X`, other columns are ignored);
 - `-freq`: acquisition frequency in Hz;
-- `-unit`: unit of `Gyr_X`, `rad/s` (XSens default) or `deg/s`;
-- `-legacy`: `1` to use the rules of the original implementation (see below), `0` by default.
+- `-unit`: unit of `Gyr_X`, `rad/s` (default) or `deg/s`.
 
 Outputs, written in the current folder: `uturn.png` (result), `uturn_construction.png`
 (intermediate steps), `uturn.txt` (results and indicators) and `uturn.json` (results,
@@ -67,29 +66,22 @@ res = uturn_detection.detect_uturn(gyr, freq=100)
 print(res.start, res.end, res.duration, res.amplitude, res.r2, res.n_half_turns)
 ```
 
-## Legacy rules
+## Application to a public data set (Section 4 of the article)
 
-Clinical studies published before the IPOL article used a first implementation of the same
-algorithm (kept verbatim in `validation/legacy/uturn_detection_sal.py`). The present
-implementation replaces three rules of Steps 2 and 3 (listed in `package/config.py` and in
-Section 5 of the article). `-legacy 1` (or `config.LEGACY = True`) reproduces the original
-rules; `validation/check_legacy_equivalence.py` verifies on random recordings that the boundaries
-are then identical to those of the original code. The present implementation is also about
-1000 times faster (cumulative sums instead of one regression per window).
+```
+python validation/run_real_data_study.py DATA_FOLDER [OUTPUT_FOLDER] [--group HS]
+```
 
-## Validation
+segments every lower-back recording of the data set of Voisard et al. (Scientific Data, 2025:
+`*_raw_data_LB.txt` and `*_meta.json`; the IPOL 2023 layout `*_lb.txt` is also accepted) and
+writes in OUTPUT_FOLDER:
 
-- `validation/run_synthetic_study.py`: accuracy on synthetic recordings with an exact ground
-  truth (robustness to noise, drift, trunk oscillations, turn duration and position, sampling
-  frequency, amplitude; turn profiles; protocol deviations; fitting window).
-- `validation/run_synthetic_sensitivity.py`: sensitivity of the boundaries to every parameter,
-  on synthetic recordings.
-- `validation/check_legacy_equivalence.py`: equivalence of the legacy rules with the original code.
-- `validation/make_figures.py`: figures and tables of the article.
-- `validation/run_real_data_study.py DATA_FOLDER`: on the public data set of Voisard et al.
-  (IPOL 2023, https://doi.org/10.5201/ipol.2023.497), consistency with the published U-turn
-  boundaries, distribution of the outputs and indicators, and sensitivity to every parameter.
-- `validation/synthetic.py`: generator of synthetic recordings.
+- `real_runs.csv` and `real_summary.txt`: boundaries, outputs and indicators of every
+  recording, summarised overall and per group;
+- `visual_check_[group].pdf`: trajectory, fitted model and boundaries of every recording, for the
+  visual inspection (recordings with a warning are titled in red; the boundaries given in the
+  metadata are dotted);
+- `fig_example_result.pdf` and `fig_example_construction.pdf`: Figures 4 and 3 of the article.
 
 ## License
 

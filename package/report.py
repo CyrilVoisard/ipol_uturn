@@ -22,7 +22,7 @@ def result_dict(res, n_samples):
         "PeakAngularVelocity_dps": round(res.peak_yaw_rate, 1),
         "Indicators": {
             "R2": round(res.r2, 4),
-            "HalfTurns": int(res.n_half_turns),
+            "UTurns": int(res.n_half_turns),
             "SignChanges": int(res.n_crossings),
             "BoundariesInsideWindow": bool(res.fit_inside_window),
             "Drift_dps": round(res.drift, 3),
@@ -30,7 +30,6 @@ def result_dict(res, n_samples):
         "FitWindow": [int(res.fit_window[0]), int(res.fit_window[1])],
         "ModelParameters": {"a_deg": res.params[0], "b_sample": res.params[1],
                             "c_samples": res.params[2], "C_deg_per_sample": res.params[3]},
-        "LegacyRules": bool(res.legacy),
         "Parameters": config.as_dict(),
     }
 
@@ -42,13 +41,13 @@ def write_reports(res, n_samples, output):
         json.dump(d, f, indent=2)
 
     warnings = []
-    if d["Indicators"]["HalfTurns"] == 0:
+    if d["Indicators"]["UTurns"] == 0:
         warnings.append("No complete U-turn: the heading never changes by more than {:.0f} deg. "
                         "The boundaries are not meaningful.".format(90 + config.HYSTERESIS_DEG))
-    elif d["Indicators"]["HalfTurns"] > 1:
-        warnings.append("Protocol: {} half-turns detected instead of 1 (e.g. the subject turned again "
+    elif d["Indicators"]["UTurns"] > 1:
+        warnings.append("Protocol: {} U-turns detected instead of 1 (e.g. the subject turned again "
                         "before or after the test). The segmented U-turn is the one closest to the "
-                        "middle of the recording.".format(d["Indicators"]["HalfTurns"]))
+                        "middle of the recording.".format(d["Indicators"]["UTurns"]))
     if not d["Indicators"]["BoundariesInsideWindow"]:
         warnings.append("Segmentation: a boundary lies on the edge of the fitting window; check "
                         "the figure.")
@@ -66,7 +65,7 @@ def write_reports(res, n_samples, output):
         "Indicators",
         "-------------------------------------------------",
         "{:<34}{:>8.4f}".format("Fit quality R2", d["Indicators"]["R2"]),
-        "{:<34}{:>8d}".format("Half-turns (protocol, expected 1)", d["Indicators"]["HalfTurns"]),
+        "{:<34}{:>8d}".format("U-turns (protocol, expected 1)", d["Indicators"]["UTurns"]),
         "{:<34}{:>8.2f} deg/s".format("Gyroscope drift removed", d["Indicators"]["Drift_dps"]),
     ]
     if warnings:

@@ -1,4 +1,16 @@
-"""
+"""U-turn segmentation from the yaw angular velocity of a lower-back IMU.
+
+The core of the method is the turning model of Salarian et al. (2009): the heading of the
+trunk during a go / U-turn / back walking test is fitted by a smooth step
+
+    M(i) = a * E((i - b) / c) + C * i,                       Equation (9) of the article
+
+    E(u) = -1/2 if u <= -1/2,  sin(pi * u) / 2 if |u| < 1/2,  1/2 if u >= 1/2,   Equation (10)
+
+and the U-turn is the interval [b - c/2, b + c/2]. Before the fit, the heading is corrected for
+the gyroscope drift (Step 1), centred so that the turn appears as a sign change (Step 2), and
+restricted to a window around the turn, re-centred and oriented (Step 3).
+
 Reference: A. Salarian, C. Zampieri, F. B. Horak, P. Carlson-Kuhta, J. G. Nutt and K. Aminian,
 "Analyzing 180 degrees turns using an inertial system reveals early signs of progress in
 Parkinson's disease", IEEE EMBC 2009, pp. 224-227, doi:10.1109/IEMBS.2009.5333970.
@@ -17,6 +29,7 @@ from . import config
 _N_LENGTHS = 6
 _EPSILON = 1e-8      # regularisation of the linearity score (deg^2)
 
+
 class UTurnNotFound(ValueError):
     """Raised when the centred heading never changes sign (no turn in the recording)."""
 
@@ -32,7 +45,7 @@ class UTurnResult:
     orientation: int              # sign applied to the heading so that the fitted step increases
     r2: float                     # coefficient of determination of the fit on the window
     n_crossings: int              # number of sign changes of the centred heading
-    n_half_turns: int             # protocol indicator: half-turns counted with hysteresis (expected 1)
+    n_half_turns: int             # protocol indicator: U-turns counted with hysteresis (expected 1)
     peak_yaw_rate: float          # max |angular velocity| between start and end (deg/s)
     drift: float                  # gyroscope drift removed in Step 1 (deg/s)
     params: tuple                 # fitted (a, b, c, C), in the oriented heading, samples
@@ -72,13 +85,13 @@ def integrate(gyr, freq):
 
 
 def step_function(u):
-    """Smooth step E(u) of Equation (step), from -1/2 to 1/2 with a half-sine transition."""
+    """Smooth step E(u) of Equation (10), from -1/2 to 1/2 with a half-sine transition."""
     u = np.asarray(u, dtype=float)
     return np.where(u <= -0.5, -0.5, np.where(u >= 0.5, 0.5, 0.5 * np.sin(np.pi * u)))
 
 
 def turning_model(x, a, b, c, C):
-    """Turning model M of Equation (model), evaluated at the sample indices x."""
+    """Turning model M of Equation (9), evaluated at the sample indices x."""
     x = np.asarray(x, dtype=float)
     return a * step_function((x - b) / c) + C * x
 
@@ -125,7 +138,7 @@ def sliding_regression(y, length):
 def best_linear_window(y, score="linearity", start_max=np.inf, end_min=-np.inf):
     """Window of y of maximal score, among the lengths of window_lengths(len(y)) (Algorithm 2).
 
-    score = "linearity" (Equation (score)): (L / n)^2 / (residual variance + EPSILON)
+    score = "linearity" (Equation (3)): (L / n)^2 / (residual variance + EPSILON)
 
     Lengths and starts are scanned in increasing order; the first maximum is kept.
 

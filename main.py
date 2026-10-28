@@ -5,11 +5,12 @@
 Usage:
     python main.py -i0 trial_lb.txt -freq 100 [-unit rad/s]
 
-Outputs:
-    uturn.png
-    uturn_construction.png
-    uturn.txt
-    uturn.json
+Outputs (in the current folder):
+    uturn.png               heading, fitted model, phases and angular velocity
+    uturn_construction.png  intermediate steps of the algorithm
+    uturn.txt               results and indicators (displayed by the demo)
+    uturn.json              results, indicators and parameters (download)
+    demo_failure.txt        reason of the failure, if the U-turn cannot be segmented
 """
 
 import argparse
@@ -35,7 +36,7 @@ def main():
 
     try:
         gyr = import_data.import_lower_back(os.path.join(data_WD, args.i0), args.freq, args.unit)
-        res = uturn_detection.detect_uturn(gyr, args.freq, legacy=bool(args.legacy))
+        res = uturn_detection.detect_uturn(gyr, args.freq)
     except (ValueError, OSError) as error:
         with open(os.path.join(data_WD, "demo_failure.txt"), "w") as f:
             f.write("The U-turn could not be segmented: {}\n".format(error))
