@@ -3,13 +3,13 @@
 """IPOL demo: U-turn segmentation of a go / U-turn / back walking test with a lower-back IMU.
 
 Usage:
-    python main.py -i0 trial_lb.txt -freq 100 [-unit rad/s] [-legacy 0]
+    python main.py -i0 trial_lb.txt -freq 100 [-unit rad/s]
 
-Outputs (in the current directory):
-    uturn.png               heading, fitted model, phases and angular velocity
-    uturn_construction.png  intermediate steps of the algorithm
-    uturn.txt               results and indicators
-    uturn.json              results, indicators and parameters (download)
+Outputs:
+    uturn.png
+    uturn_construction.png
+    uturn.txt
+    uturn.json
 """
 
 import argparse
@@ -31,8 +31,6 @@ def main():
                         help="Acquisition frequency (Hz).")
     parser.add_argument("-unit", metavar="unit", default=config.GYR_UNIT, choices=["rad/s", "deg/s"],
                         help="Unit of the angular velocity in the file (default: rad/s).")
-    parser.add_argument("-legacy", metavar="legacy", type=int, default=int(config.LEGACY),
-                        help="1 to use the rules of the original implementation (default: 0).")
     args = parser.parse_args()
 
     try:

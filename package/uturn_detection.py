@@ -1,18 +1,4 @@
-"""U-turn segmentation from the yaw angular velocity of a lower-back IMU.
-
-The core of the method is the turning model of Salarian et al. (2009): the heading of the
-trunk during a go / U-turn / back walking test is fitted by a smooth step
-
-    M(i) = a * E((i - b) / c) + C * i,                       Equation (model)
-
-    E(u) = -1/2 if u <= -1/2,  sin(pi * u) / 2 if |u| < 1/2,  1/2 if u >= 1/2,   (step)
-
-and the U-turn is the interval [b - c/2, b + c/2]. Before the fit, the heading is corrected for
-the gyroscope drift (Step 1), centred so that the turn appears as a sign change (Step 2), and
-restricted to a window around the turn, re-centred and oriented (Step 3), so that the fit
-(Step 4) is not disturbed by the drift, by the direction of the turn or by movements far from
-the turn (e.g. rotations before or after the test).
-
+"""
 Reference: A. Salarian, C. Zampieri, F. B. Horak, P. Carlson-Kuhta, J. G. Nutt and K. Aminian,
 "Analyzing 180 degrees turns using an inertial system reveals early signs of progress in
 Parkinson's disease", IEEE EMBC 2009, pp. 224-227, doi:10.1109/IEMBS.2009.5333970.
@@ -30,10 +16,6 @@ from . import config
 # quarter to a half of the recording), the linearity score is (L/N)^2 / (variance + EPSILON).
 _N_LENGTHS = 6
 _EPSILON = 1e-8      # regularisation of the linearity score (deg^2)
-
-# Constant of the original implementation, used with legacy=True only (Section 5).
-_LEGACY_DIRECTION_FRAC = 0.30
-
 
 class UTurnNotFound(ValueError):
     """Raised when the centred heading never changes sign (no turn in the recording)."""
@@ -59,7 +41,6 @@ class UTurnResult:
     crossings: np.ndarray         # all sign changes of the centred heading
     drift_window: tuple           # (start, end) of the window used for the drift estimate
     fit_window: tuple             # (start, end) of the window used for the model fit
-    legacy: bool                  # True if the rules of the original implementation were used
     theta_raw: np.ndarray = field(repr=False)     # integrated heading (deg)
     theta_c: np.ndarray = field(repr=False)       # drift-corrected, centred on the recording (deg)
     theta: np.ndarray = field(repr=False)         # centred on the fit window and oriented (deg)
@@ -145,8 +126,6 @@ def best_linear_window(y, score="linearity", start_max=np.inf, end_min=-np.inf):
     """Window of y of maximal score, among the lengths of window_lengths(len(y)) (Algorithm 2).
 
     score = "linearity" (Equation (score)): (L / n)^2 / (residual variance + EPSILON)
-    score = "legacy" (original rule of Step 3, legacy mode only): r^2 * (L / n) / slope, for the
-            windows such that start < start_max and start + L > end_min
 
     Lengths and starts are scanned in increasing order; the first maximum is kept.
 
@@ -161,13 +140,8 @@ def best_linear_window(y, score="linearity", start_max=np.inf, end_min=-np.inf):
         if length < 2 or length > n:
             continue
         slope, var_res, r2 = sliding_regression(y, length)
-        starts = np.arange(n - length + 1)
         if score == "linearity":
             values = (length / n) ** 2 / (var_res + _EPSILON)
-        elif score == "legacy":
-            with np.errstate(divide="ignore", invalid="ignore"):
-                values = r2 * (length / n) / slope
-            values = np.where((starts < start_max) & (starts + length > end_min), values, -np.inf)
         else:
             raise ValueError("Unknown score: {}".format(score))
         values = np.where(np.isfinite(values), values, -np.inf)
@@ -191,10 +165,8 @@ def centre(theta, start=0, end=None):
     return theta - (q_low + q_high) / 2.0
 
 
-def sign_changes(theta_c, legacy):
+def sign_changes(theta_c):
     """Indices i such that the centred heading changes sign between samples i and i + 1."""
-    if legacy:
-        return np.where(np.sign(theta_c[1:] * theta_c[:-1]) == -1)[0]
     positive = theta_c > 0
     return np.where(positive[1:] != positive[:-1])[0]
 
@@ -234,20 +206,18 @@ def r_squared(y, y_hat):
 # Main function
 # ---------------------------------------------------------------------------
 
-def detect_uturn(gyr, freq, legacy=None):
+def detect_uturn(gyr, freq):
     """Detect the boundaries of the single U-turn of a go / U-turn / back walking test.
 
     Arguments:
         gyr {array} -- angular velocity about the X axis of the lower-back sensor (deg/s),
             pre-processed (low-pass filtered), one value per sample
         freq {float} -- acquisition frequency (Hz)
-        legacy {bool} -- use the rules of the original implementation (default: config.LEGACY)
 
     Returns
     -------
     UTurnResult
     """
-    legacy = config.LEGACY if legacy is None else bool(legacy)
     gyr = np.asarray(gyr, dtype=float)
     n = len(gyr)
     if n < 20:
@@ -260,35 +230,24 @@ def detect_uturn(gyr, freq, legacy=None):
     beta, alpha = line_fit(theta_raw, *drift_window)
     theta = theta_raw - (beta * t + alpha)
 
-    # Step 2. Centring and turn candidates (legacy: orientation at this stage) --------------
+    # Step 2. Centring and turn candidates --------------
     theta_c = centre(theta)
-    if legacy and np.mean(theta_c[:int(_LEGACY_DIRECTION_FRAC * n)]) > 0:
-        theta_c = -theta_c
-    crossings = sign_changes(theta_c, legacy)
+    crossings = sign_changes(theta_c)
     if len(crossings) == 0:
         raise UTurnNotFound("The centred heading never changes sign: no U-turn was found.")
     middle = int(crossings[np.argmin(np.abs(crossings - n / 2))])
 
     # Step 3. Fitting window ----------------------------------------------------------------
     n_back = n - middle
-    if legacy:
-        go = best_linear_window(theta_c[:middle], score="legacy", end_min=middle / 2.0)
-        back = best_linear_window(theta_c[middle:], score="legacy", start_max=middle / 2.0)
-        w_start = go[0] if go is not None else 0
-        w_end = middle + back[1] if back is not None else n
-    else:
-        w_start = int(np.ceil((1.0 - config.SIDE_FRAC) * middle))
-        w_end = middle + int(np.floor(config.SIDE_FRAC * n_back))
+    w_start = int(np.ceil((1.0 - config.SIDE_FRAC) * middle))
+    w_end = middle + int(np.floor(config.SIDE_FRAC * n_back))
     fit_window = (int(w_start), int(w_end))
 
     # Step 3 (end). Centring on the fitting window and orientation -------------------------
     theta_w = centre(theta, *fit_window)
-    if legacy:
-        direction = -1 if np.mean(theta_w[:int(_LEGACY_DIRECTION_FRAC * n)]) > 0 else 1
-    else:
-        before = np.mean(theta_w[fit_window[0]:middle])
-        after = np.mean(theta_w[middle:fit_window[1]])
-        direction = 1 if after >= before else -1
+    before = np.mean(theta_w[fit_window[0]:middle])
+    after = np.mean(theta_w[middle:fit_window[1]])
+    direction = 1 if after >= before else -1
     theta_w = direction * theta_w
 
     # Step 4. Non-linear least-squares fit of the turning model -----------------------------
@@ -315,5 +274,5 @@ def detect_uturn(gyr, freq, legacy=None):
                        peak_yaw_rate=peak, drift=float(beta * freq), params=(a, b, c, C), p0=p0,
                        middle=middle, crossings=crossings,
                        drift_window=(int(drift_window[0]), int(drift_window[1])),
-                       fit_window=fit_window, legacy=legacy, theta_raw=theta_raw,
+                       fit_window=fit_window, theta_raw=theta_raw,
                        theta_c=theta_c, theta=theta_w, model=model, model0=turning_model(x, *p0))
