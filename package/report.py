@@ -65,7 +65,7 @@ def write_reports(res, n_samples, output):
         "Indicators",
         "-------------------------------------------------",
         "{:<34}{:>8.4f}".format("Fit quality R2", d["Indicators"]["R2"]),
-        "{:<34}{:>8d}".format("U-turns (protocol, expected 1)", d["Indicators"]["UTurns"]),
+        "{:<34}{:>8d}".format("Number of U-turns (expected 1)", d["Indicators"]["UTurns"]),
         "{:<34}{:>8.2f} deg/s".format("Gyroscope drift removed", d["Indicators"]["Drift_dps"]),
     ]
     if warnings:

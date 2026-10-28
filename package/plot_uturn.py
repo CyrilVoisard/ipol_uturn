@@ -34,7 +34,7 @@ def _phase_bar(ax, res, n):
 
 
 def plot_result(res, gyr, output, filename="uturn.png"):
-    """Result figure: heading with fitted model, phase bar and angular velocity.
+    """Result figure: trajectory with fitted model, phase bar and angular velocity.
 
     Arguments:
         res {UTurnResult} -- output of uturn_detection.detect_uturn
@@ -43,13 +43,13 @@ def plot_result(res, gyr, output, filename="uturn.png"):
     """
     n, f = len(gyr), res.freq
     time = np.arange(n) / f
-    heading = res.orientation * res.theta            # heading in the original direction
+    trajectory = res.orientation * res.theta            # trajectory in the original direction
     x = np.arange(*res.fit_window) / f
     model = res.orientation * res.model
 
     fig, ax = plt.subplots(3, 1, figsize=(14, 8.5), sharex=True,
                            gridspec_kw={"height_ratios": [6, 1, 4]})
-    ax[0].plot(time, heading, color=COLOR_SIGNAL, lw=1.5, label="heading (drift-corrected)")
+    ax[0].plot(time, trajectory, color=COLOR_SIGNAL, lw=1.5, label="angular position (drift-corrected)")
     ax[0].plot(x, model, color=COLOR_MODEL, lw=2, ls="--", label="fitted turning model")
     ax[1].sharex(ax[0])
     ax[2].plot(time, gyr, color=COLOR_SIGNAL, lw=1)
@@ -59,11 +59,10 @@ def plot_result(res, gyr, output, filename="uturn.png"):
         a.axvline(res.end / f, color="k", ls="--", lw=1.5)
         a.grid(alpha=0.4)
     ax[0].plot([], [], color="k", ls="--", label="U-turn boundaries")
-    ax[0].set_ylabel("Heading (deg)")
+    ax[0].set_ylabel("Angular position (deg)")
     ax[0].legend(loc="best")
     turn = "left" if res.direction > 0 else "right"
-    ax[0].set_title("U-turn: {:.2f} s to {:.2f} s, duration {:.2f} s, amplitude {:.0f} deg ({} turn)"
-                    .format(res.start / f, res.end / f, res.duration, res.amplitude, turn))
+    ax[0].set_title("U-turn detection ({} turn)".format(turn), fontweight="bold")
     _phase_bar(ax[1], res, n)
     ax[2].set_ylabel("Angular velocity\n(deg/s)")
     ax[2].set_xlabel("Time (s)")
@@ -85,38 +84,37 @@ def plot_construction(res, output, filename="uturn_construction.png"):
 
     fig, ax = plt.subplots(3, 1, figsize=(14, 11), sharex=True)
 
-    # A. integrated heading and estimated drift
+    # A. integrated angular position and estimated drift
     slope = res.drift / f
     d0, d1 = res.drift_window
     raw = res.theta_raw
     intercept = np.mean(raw[d0:d1]) - slope * np.mean(np.arange(d0, d1))
-    ax[0].plot(time, raw, color=COLOR_SIGNAL, lw=1.5, label="integrated heading")
+    ax[0].plot(time, raw, color=COLOR_SIGNAL, lw=1.5, label="integrated angular position")
     ax[0].plot(time, slope * i + intercept, color=COLOR_INIT, lw=2, ls="--",
                label="estimated drift ({:+.2f} deg/s)".format(res.drift))
     ax[0].axvspan(d0 / f, d1 / f, color=COLOR_INIT, alpha=0.2, lw=0, label="drift window")
-    ax[0].set_ylabel("Heading (deg)")
-    ax[0].set_title("A. Step 1 - heading and drift correction", loc="left")
+    ax[0].set_ylabel("Angular position (deg)")
+    ax[0].set_title("Step 1 - Drift correction", loc="left", fontweight="bold")
 
-    # B. centred heading, sign changes and fitting window
-    ax[1].plot(time, res.theta_c, color=COLOR_SIGNAL, lw=1.5, label="drift-corrected, centred heading")
+    # B. centred angular position, sign changes and fitting window
+    ax[1].plot(time, res.theta_c, color=COLOR_SIGNAL, lw=1.5, label="drift-corrected, centred trajectory")
     ax[1].axhline(0, color="k", lw=1)
     ax[1].plot(res.crossings / f, np.zeros(len(res.crossings)), "o", ms=7, mfc="none",
-               color=COLOR_MODEL, label="sign changes ({})".format(res.n_crossings))
+               color=COLOR_MODEL, label="sign changes (n = {})".format(res.n_crossings))
     ax[1].plot(res.middle / f, 0, "o", ms=8, color=COLOR_MODEL, label="selected sign change")
     ax[1].axvspan(a0 / f, a1 / f, color=COLOR_WINDOW, alpha=0.15, lw=0, label="fitting window")
-    ax[1].set_ylabel("Heading (deg)")
-    ax[1].set_title("B. Steps 2-3 - centring, turn candidates and fitting window "
-                    "({} U-turn(s) detected)".format(res.n_half_turns), loc="left")
+    ax[1].set_ylabel("Angular position (deg)")
+    ax[1].set_title("Steps 2-3 - centering, turn candidates and fitting window", loc="left", fontweight="bold")
 
     # C. model fit
-    ax[2].plot(x, res.theta[a0:a1], color=COLOR_SIGNAL, lw=1.5, label="heading on the window")
+    ax[2].plot(x, res.theta[a0:a1], color=COLOR_SIGNAL, lw=1.5, label="trajectory on the window")
     ax[2].plot(x, res.model0, color=COLOR_INIT, lw=2, ls=":", label="initial model")
     ax[2].plot(x, res.model, color=COLOR_MODEL, lw=2, ls="--",
                label="fitted model (R$^2$ = {:.4f})".format(res.r2))
     ax[2].axvspan(res.start / f, res.end / f, color=COLOR_TURN, alpha=0.25, lw=0, label="U-turn")
-    ax[2].set_ylabel("Heading (deg)")
+    ax[2].set_ylabel("Angular position (deg)")
     ax[2].set_xlabel("Time (s)")
-    ax[2].set_title("C. Step 4 - fit of the turning model", loc="left")
+    ax[2].set_title("Step 4 - fit of the turning model", loc="left", fontweight="bold")
 
     for a in ax:
         a.grid(alpha=0.4)
