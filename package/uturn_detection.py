@@ -25,6 +25,15 @@ from scipy.optimize import least_squares
 
 from . import config
 
+# Fixed constants of the drift estimation (Section 3.2 of the article). They are not parameters
+# of the method: the window lengths are floor(N/4) + k * floor(N/20), k = 0, ..., 5 (from a
+# quarter to a half of the recording), the linearity score is (L/N)^2 / (variance + EPSILON).
+_N_LENGTHS = 6
+_EPSILON = 1e-8      # regularisation of the linearity score (deg^2)
+
+# Constant of the original implementation, used with legacy=True only (Section 5).
+_LEGACY_DIRECTION_FRAC = 0.30
+
 
 class UTurnNotFound(ValueError):
     """Raised when the centred heading never changes sign (no turn in the recording)."""
@@ -93,23 +102,20 @@ def turning_model(x, a, b, c, C):
     return a * step_function((x - b) / c) + C * x
 
 
-def _window_lengths(n, min_frac, max_frac, step_frac):
-    """Candidate window lengths L in {L_min, L_min + D, ..., <= L_max}, in samples."""
-    l_min = max(2, int(min_frac * n))
-    l_max = int(max_frac * n)
-    step = max(1, int(step_frac * n))
-    return range(l_min, l_max + 1, step)
+def window_lengths(n):
+    """Candidate window lengths floor(n/4) + k * floor(n/20), k = 0, ..., 5 (Section 3.2)."""
+    return [n // 4 + k * max(1, n // 20) for k in range(_N_LENGTHS)]
 
 
 def sliding_regression(y, length):
-    """Least-squares line fit of y on every window of the given length.
+    """Least-squares line fit of y on every window of the given length (Algorithm 2).
 
-    For each start s, the line is fitted on (i, y_i), i = s, ..., s + length - 1. Sums are
-    obtained from cumulative sums, so that all windows are processed in O(N).
+    For each start s, the line is fitted on (i, y_i), i = s, ..., s + length - 1. The sums over
+    each window are obtained from cumulative sums, so that all windows are processed in O(n).
 
     Returns
     -------
-    slope, residual variance (population), r^2 -- one value per start s
+    slope, residual variance (mean squared residual), r^2 -- one value per start s
     """
     y = np.asarray(y, dtype=float)
     y = y - np.mean(y)                        # reduces round-off, does not change the fits
@@ -135,16 +141,14 @@ def sliding_regression(y, length):
     return slope, sse / length, r2
 
 
-def best_linear_window(y, n_ref, min_frac, max_frac, step_frac, score="variance",
-                       power=2, start_max=np.inf, end_min=-np.inf):
-    """Search the window of y that maximises a linearity score.
+def best_linear_window(y, score="linearity", start_max=np.inf, end_min=-np.inf):
+    """Window of y of maximal score, among the lengths of window_lengths(len(y)) (Algorithm 2).
 
-    Candidate windows have a length L in _window_lengths(n_ref, ...) and any start s such that
-    s < start_max and s + L > end_min. Lengths are scanned in increasing order and starts in
-    increasing order; the first maximum is kept.
+    score = "linearity" (Equation (score)): (L / n)^2 / (residual variance + EPSILON)
+    score = "legacy" (original rule of Step 3, legacy mode only): r^2 * (L / n) / slope, for the
+            windows such that start < start_max and start + L > end_min
 
-    score = "variance" (Equation (score)):  (L / n_ref)^power / (residual variance + EPSILON)
-    score = "legacy"   (original rule of Step 3, legacy mode only):  r^2 * (L / n_ref) / slope
+    Lengths and starts are scanned in increasing order; the first maximum is kept.
 
     Returns
     -------
@@ -153,22 +157,20 @@ def best_linear_window(y, n_ref, min_frac, max_frac, step_frac, score="variance"
     y = np.asarray(y, dtype=float)
     n = len(y)
     best_score, best = -np.inf, None
-    for length in _window_lengths(n_ref, min_frac, max_frac, step_frac):
-        if length > n or length < 2:
+    for length in window_lengths(n):
+        if length < 2 or length > n:
             continue
         slope, var_res, r2 = sliding_regression(y, length)
         starts = np.arange(n - length + 1)
-        if score == "variance":
-            values = (length / n_ref) ** power / (var_res + config.EPSILON)
+        if score == "linearity":
+            values = (length / n) ** 2 / (var_res + _EPSILON)
         elif score == "legacy":
             with np.errstate(divide="ignore", invalid="ignore"):
-                values = r2 * (length / n_ref) / slope
+                values = r2 * (length / n) / slope
+            values = np.where((starts < start_max) & (starts + length > end_min), values, -np.inf)
         else:
             raise ValueError("Unknown score: {}".format(score))
-        admissible = (starts < start_max) & (starts + length > end_min) & np.isfinite(values)
-        if not np.any(admissible):
-            continue
-        values = np.where(admissible, values, -np.inf)
+        values = np.where(np.isfinite(values), values, -np.inf)
         k = int(np.argmax(values))
         if values[k] > best_score:
             best_score, best = values[k], (k, k + length)
@@ -180,6 +182,13 @@ def line_fit(y, start, end):
     x = np.arange(start, end, dtype=float)
     slope, intercept = np.polyfit(x, np.asarray(y[start:end], dtype=float), 1)
     return slope, intercept
+
+
+def centre(theta, start=0, end=None):
+    """Subtract the midpoint of the Q_LOW and Q_HIGH quantiles of theta[start:end]."""
+    ref = theta[start:end]
+    q_low, q_high = np.quantile(ref, config.Q_LOW), np.quantile(ref, config.Q_HIGH)
+    return theta - (q_low + q_high) / 2.0
 
 
 def sign_changes(theta_c, legacy):
@@ -212,13 +221,6 @@ def count_half_turns(theta, hysteresis):
         while value < q - 0.5 - h:
             q, count = q - 1, count + 1
     return count
-
-
-def centre(theta, start=0, end=None):
-    """Subtract the midpoint of the Q_LOW and Q_HIGH quantiles of theta[start:end]."""
-    ref = theta[start:end]
-    q_low, q_high = np.quantile(ref, config.Q_LOW), np.quantile(ref, config.Q_HIGH)
-    return theta - (q_low + (q_high - q_low) / 2.0)
 
 
 def r_squared(y, y_hat):
@@ -254,15 +256,13 @@ def detect_uturn(gyr, freq, legacy=None):
 
     # Step 1. Heading and drift correction ------------------------------------------------
     theta_raw = integrate(gyr, freq)
-    drift_window = best_linear_window(theta_raw, n, config.DRIFT_MIN_FRAC, config.DRIFT_MAX_FRAC,
-                                      config.WINDOW_STEP_FRAC, score="variance",
-                                      power=config.DRIFT_WEIGHT_POWER)
+    drift_window = best_linear_window(theta_raw)
     beta, alpha = line_fit(theta_raw, *drift_window)
     theta = theta_raw - (beta * t + alpha)
 
-    # Step 2. Centring, orientation (legacy only at this stage) and turn candidates --------
+    # Step 2. Centring and turn candidates (legacy: orientation at this stage) --------------
     theta_c = centre(theta)
-    if legacy and np.mean(theta_c[:int(config.LEGACY_DIRECTION_FRAC * n)]) > 0:
+    if legacy and np.mean(theta_c[:int(_LEGACY_DIRECTION_FRAC * n)]) > 0:
         theta_c = -theta_c
     crossings = sign_changes(theta_c, legacy)
     if len(crossings) == 0:
@@ -272,12 +272,8 @@ def detect_uturn(gyr, freq, legacy=None):
     # Step 3. Fitting window ----------------------------------------------------------------
     n_back = n - middle
     if legacy:
-        go = best_linear_window(theta_c[:middle], middle, config.LEGACY_SIDE_MIN_FRAC,
-                                config.LEGACY_SIDE_MAX_FRAC, config.WINDOW_STEP_FRAC, score="legacy",
-                                end_min=middle / 2.0)
-        back = best_linear_window(theta_c[middle:], n_back, config.LEGACY_SIDE_MIN_FRAC,
-                                  config.LEGACY_SIDE_MAX_FRAC, config.WINDOW_STEP_FRAC, score="legacy",
-                                  start_max=middle / 2.0)
+        go = best_linear_window(theta_c[:middle], score="legacy", end_min=middle / 2.0)
+        back = best_linear_window(theta_c[middle:], score="legacy", start_max=middle / 2.0)
         w_start = go[0] if go is not None else 0
         w_end = middle + back[1] if back is not None else n
     else:
@@ -288,7 +284,7 @@ def detect_uturn(gyr, freq, legacy=None):
     # Step 3 (end). Centring on the fitting window and orientation -------------------------
     theta_w = centre(theta, *fit_window)
     if legacy:
-        direction = -1 if np.mean(theta_w[:int(config.LEGACY_DIRECTION_FRAC * n)]) > 0 else 1
+        direction = -1 if np.mean(theta_w[:int(_LEGACY_DIRECTION_FRAC * n)]) > 0 else 1
     else:
         before = np.mean(theta_w[fit_window[0]:middle])
         after = np.mean(theta_w[middle:fit_window[1]])
@@ -319,5 +315,5 @@ def detect_uturn(gyr, freq, legacy=None):
                        peak_yaw_rate=peak, drift=float(beta * freq), params=(a, b, c, C), p0=p0,
                        middle=middle, crossings=crossings,
                        drift_window=(int(drift_window[0]), int(drift_window[1])),
-                       fit_window=fit_window, legacy=legacy, theta_raw=theta_raw, theta_c=theta_c, theta=theta_w,
-                       model=model, model0=turning_model(x, *p0))
+                       fit_window=fit_window, legacy=legacy, theta_raw=theta_raw,
+                       theta_c=theta_c, theta=theta_w, model=model, model0=turning_model(x, *p0))
